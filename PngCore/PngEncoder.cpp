@@ -80,9 +80,10 @@ namespace ImgOps
 		StoreChunk_IHDR(file);
 		if(_image->GetPalettesCount() > 0)
 			StoreChunk_PLTE(file);
+		if(_image->GetDecryptedFormat() != PixelFormats::Unknown)
+			StoreChunk_deCf(file);
 		StoreChunk_IDAT(file);
 		StoreChunk_IEND(file);
-
 	}
 
 	void PNGImageEncoder::ReportError(const char* error)
@@ -423,6 +424,40 @@ namespace ImgOps
 		if(writeBytes != bufOffset)
 		{
 			ReportError("Failed to store PLTE");
+		}
+	}
+
+	void PNGImageEncoder::StoreChunk_deCf(FileStream* file)
+	{
+		// 1) Store chunk length and type in buffer
+		uint32 length = 8;
+		uint32 ihdrBytes = deCf_Bytes;
+		Uint32ToByte4(length, _chunkBuf);
+		Uint32ToByte4(ihdrBytes, _chunkBuf + 4);
+
+		uint32 bufOffset = 8;
+
+		// Contents:
+		// 4bytes[0] : pix format
+		// 4bytes[4] : decrypted image last chunk size
+		
+		Uint32ToByte4(_image->GetDecryptedFormat(), _chunkBuf + bufOffset);
+		bufOffset += 4;
+		Uint32ToByte4(_image->GetDecryptedLastChunkSize(), _chunkBuf + bufOffset);
+		bufOffset += 4;
+
+		// Compute CRC from buffer
+		CRC_Init();
+		CRC_Add(_chunkBuf + 4, bufOffset - 4);
+		uint32 crc = CRC_Finish();
+
+		Uint32ToByte4(crc, _chunkBuf + bufOffset);
+		bufOffset += 4;
+
+		int64 writeBytes = file->WriteSome(bufOffset, _chunkBuf);
+		if(writeBytes != bufOffset)
+		{
+			ReportError("Failed to store deCf");
 		}
 	}
 

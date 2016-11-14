@@ -493,6 +493,21 @@ namespace ImgOps
 		}
 	};
 
+	struct ChunkReader_deCf : public ChunkReader
+	{
+		ChunkReader_deCf(PNGImageDecoder* decoder) : ChunkReader(decoder) { }
+		void operator()(ChunkInfo* info, byte* data)
+		{
+			// Contents:
+			// 4bytes[0] : decrypted image pixel format
+			// 4bytes[4] : decrypted image last chunk size
+			uint32 pixFormatBytes =  Byte4ToUint32(data);
+			uint32 lastChunkSize = Byte4ToUint32(data+4);
+			PixelFormat pixFormat = (PixelFormat)pixFormatBytes;
+			_decoder->GetImage()->SetDecryptedFormat(pixFormat);
+		}
+	};
+
 #pragma endregion
 
 	PNGImageDecoder::PNGImageDecoder()
@@ -502,6 +517,7 @@ namespace ImgOps
 		_chunkReaders[IEND_Bytes] = new ChunkReader_IEND(this);
 		_chunkReaders[IDAT_Bytes] = new ChunkReader_IDAT(this);
 		_chunkReaders[PLTE_Bytes] = new ChunkReader_PLTE(this);
+		_chunkReaders[deCf_Bytes] = new ChunkReader_deCf(this);
 	}
 
 	PNGImageDecoder::~PNGImageDecoder()

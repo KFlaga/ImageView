@@ -42,10 +42,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)Lib\$(Configuration)\</OutDir>
     <LibraryPath>C:\Users\Kamil\Documents\Visual Studio 2012\Projects\ImgOps\Lib\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LibraryPath>C:\Users\Kamil\Documents\Visual Studio 2012\Projects\ImgOps\Lib\Release;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Lib\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -87,6 +89,8 @@
     <ClInclude Include="Image.h" />
     <ClInclude Include="PngFilter.h" />
     <ClInclude Include="PngImage.h" />
+    <ClInclude Include="Profiler.h" />
+    <ClInclude Include="RSA.h" />
     <ClInclude Include="TypeDefs.h" />
   </ItemGroup>
   <ItemGroup>
@@ -95,6 +99,8 @@
     <ClCompile Include="PngCrc.cpp" />
     <ClCompile Include="PngDecoder.cpp" />
     <ClCompile Include="PngEncoder.cpp" />
+    <ClCompile Include="Profiler.cpp" />
+    <ClCompile Include="RSA.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

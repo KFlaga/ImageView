@@ -38,6 +38,7 @@ namespace ImgOps
 		sPLT_SuggestedPalette = 0x100,
 		hIST_PaletteHistogram = 0x110,
 		tIME_ModificationTime = 0x120,
+		deCf_DecryptedFormat= 0x130,
 
 		ChunkTypeMask = 0xFFF0,
 	};
@@ -116,6 +117,8 @@ namespace ImgOps
 		((uint32)'I' << 16) | ((uint32)'h' << 24),
 		tIME_Bytes = (uint32)'E' | ((uint32)'M' << 8) | 
 		((uint32)'I' << 16) | ((uint32)'t' << 24),
+		deCf_Bytes = (uint32)'f' | ((uint32)'C' << 8) | 
+		((uint32)'e' << 16) | ((uint32)'d' << 24),
 	};
 
 	namespace ColorModes
@@ -257,6 +260,7 @@ namespace ImgOps
 		void StoreChunk_PLTE(FileStream* file);
 		void StoreChunk_IDAT(FileStream* file);
 		void StoreChunk_IEND(FileStream* file);
+		void StoreChunk_deCf(FileStream* file);
 
 		// Stores filtered rows in '_filteredImageBuf', uses fixed 'filter' method or adaptative if 'filter' = -1
 		uint32 FilterRows(uint32 startRow, uint32 rowsCount, int filter = -1);

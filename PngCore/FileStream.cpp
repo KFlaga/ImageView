@@ -25,7 +25,7 @@ namespace ImgOps
 		default:
 			return;
 		}
-		
+
 		fopen_s((FILE**)(&_file), filePath, stdOpenMode.c_str());
 		if(_file == NULL)
 			return;
@@ -95,6 +95,23 @@ namespace ImgOps
 	int64 FileStream::ReadSome(int64 bytesToRead, byte* buffer)
 	{
 		return fread(buffer, 1, bytesToRead, File);
+	}
+
+	int64 FileStream::ReadLine(int64 bytesToRead, byte* buffer)
+	{
+		if(fgets((char*)buffer, bytesToRead, File) != NULL)
+		{
+			for(int p = 0; p < bytesToRead; ++p)
+			{
+				byte c = buffer[p];
+				if(c == '\r' || c == '\n' || c == EOF) // New line / EOF
+				{
+					buffer[p] = '\0';
+					return p;
+				}
+			}
+		}
+		return -1;
 	}
 
 	int64 FileStream::WriteSome(int64 bytesToWrite, byte* buffer)

@@ -19,6 +19,9 @@ namespace ImgOps
 		                 // pixels contains indices for this array then
 		int _palettesCount;
 
+		PixelFormat _decryptedFormat; // If != 0 then image is encrypted. Format of decrypted image was one stored here
+		uint32 _decryptedLastChunkSize;
+
 	public:
 		Image(int width, int height, PixelFormat format)
 		{
@@ -32,6 +35,7 @@ namespace ImgOps
 			_dataPtr = (byte*)malloc(_width * _height * _pixelSize);
 			_palettes = NULL;
 			_palettesCount = 0;
+			_decryptedFormat = PixelFormats::Unknown;
 		}
 		
 		Image(int width, int height, PixelFormat format, int palettes)
@@ -47,6 +51,22 @@ namespace ImgOps
 
 			_palettesCount = palettes;
 			_palettes = (byte*)malloc(palettes * 3);
+			_decryptedFormat = PixelFormats::Unknown;
+		}
+
+		Image(int width, int height, PixelFormat format, byte* data)
+		{
+			_width = width;
+			_height = height;
+			_pixelSize = PixelFormats::GetPixelSize(format);
+			_channelSize = _pixelSize / PixelFormats::GetChannels(format);
+			_stride = _width * _pixelSize;
+			_format = format;
+
+			_dataPtr = data;
+			_palettes = NULL;
+			_palettesCount = 0;
+			_decryptedFormat = PixelFormats::Unknown;
 		}
 
 		~Image()
@@ -65,6 +85,13 @@ namespace ImgOps
 		byte* Data() { return _dataPtr; }
 
 		PixelFormat PixFormat() const { return _format; }
+
+		PixelFormat GetDecryptedFormat() const { return _decryptedFormat; }
+		void SetDecryptedFormat(PixelFormat format) { _decryptedFormat = format; }
+		bool IsDecrypted() const { return _decryptedFormat != PixelFormats::Unknown; }
+
+		uint32 GetDecryptedLastChunkSize() const { return _decryptedLastChunkSize; }
+		void SetDecryptedLastChunkSize(uint32 size) { _decryptedLastChunkSize = size; }
 
 		void SetPalettesCount(int count)
 		{

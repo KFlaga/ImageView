@@ -2,6 +2,7 @@
 
 #include <Image.h>
 #include <Fourier.h>
+#include <RSA.h>
 
 namespace ImgOps 
 {
@@ -13,11 +14,20 @@ namespace ImgOps
 		Image* _phaseImage;
 		FourierData* _fourier;
 
+		RSA::RSAKey* _publicKey;
+		RSA::RSAKey* _privateKey;
+
 		// Buttons panel:
 		System::Windows::Forms::Panel^  _butsPanels;
 		System::Windows::Forms::Button^  _butLoad;
 		System::Windows::Forms::Button^  _butSave;
 		System::Windows::Forms::Button^  _butFourier;
+		System::Windows::Forms::Button^  _butFourierExp;
+		System::Windows::Forms::Button^  _butKeyGen;
+		System::Windows::Forms::Button^  _butKeyLoad;
+		System::Windows::Forms::Button^  _butKeySave;
+		System::Windows::Forms::Button^  _butEncrypt;
+		System::Windows::Forms::Button^  _butDecrypt;
 
 		// Images tab control:
 		System::Windows::Forms::TabControl^  _tabsImages;
@@ -32,7 +42,6 @@ namespace ImgOps
 		System::Drawing::Bitmap^ _frameworkImage;
 		System::Drawing::Bitmap^ _frameworkMagnitude;
 		System::Drawing::Bitmap^ _frameworkPhase;
-	private: System::Windows::Forms::Button^  _butFourierExp;
 
 		System::ComponentModel::Container ^components;
 
@@ -46,9 +55,18 @@ namespace ImgOps
 		System::Void _butLoad_Click(System::Object^  sender, System::EventArgs^  e);
 		System::Void _butSave_Click(System::Object^  sender, System::EventArgs^  e);
 		System::Void _butFourier_Click(System::Object^  sender, System::EventArgs^  e);
-	    System::Void _butFourierLog_Click(System::Object^  sender, System::EventArgs^  e);
+		System::Void _butFourierLog_Click(System::Object^  sender, System::EventArgs^  e);
+		System::Void _butKeyGen_Click(System::Object^  sender, System::EventArgs^  e);
+		System::Void _butKeyLoad_Click(System::Object^  sender, System::EventArgs^  e);
+		System::Void _butKeySave_Click(System::Object^  sender, System::EventArgs^  e);
+		System::Void _butEncrypt_Click(System::Object^  sender, System::EventArgs^  e);
+		System::Void _butDecrypt_Click(System::Object^  sender, System::EventArgs^  e);
+		
+		void SetNewImage(Image* image);
 		void FourierTransform(bool scaleLog);
 		void ResetFourier();
+		bool ReadKeyFromFile(const char* filePath, RSA::RSAKey* key);
+		bool WriteKeyToFile(const char* filePath, RSA::RSAKey* key);
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -67,8 +85,13 @@ namespace ImgOps
 			this->_tabPhase = (gcnew System::Windows::Forms::TabPage());
 			this->_picBoxPhase = (gcnew System::Windows::Forms::PictureBox());
 			this->_butsPanels = (gcnew System::Windows::Forms::Panel());
-			this->_butFourier = (gcnew System::Windows::Forms::Button());
+			this->_butKeyGen = (gcnew System::Windows::Forms::Button());
 			this->_butFourierExp = (gcnew System::Windows::Forms::Button());
+			this->_butFourier = (gcnew System::Windows::Forms::Button());
+			this->_butKeySave = (gcnew System::Windows::Forms::Button());
+			this->_butKeyLoad = (gcnew System::Windows::Forms::Button());
+			this->_butEncrypt = (gcnew System::Windows::Forms::Button());
+			this->_butDecrypt = (gcnew System::Windows::Forms::Button());
 			this->_tabsImages->SuspendLayout();
 			this->_tabImage->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->_picBoxImage))->BeginInit();
@@ -85,7 +108,7 @@ namespace ImgOps
 			this->_butLoad->Name = L"_butLoad";
 			this->_butLoad->Size = System::Drawing::Size(108, 33);
 			this->_butLoad->TabIndex = 1;
-			this->_butLoad->Text = L"Load Image";
+			this->_butLoad->Text = L"Wczytaj Obraz";
 			this->_butLoad->UseVisualStyleBackColor = true;
 			this->_butLoad->Click += gcnew System::EventHandler(this, &MainWindow::_butLoad_Click);
 			// 
@@ -95,7 +118,7 @@ namespace ImgOps
 			this->_butSave->Name = L"_butSave";
 			this->_butSave->Size = System::Drawing::Size(108, 32);
 			this->_butSave->TabIndex = 2;
-			this->_butSave->Text = L"Save Image";
+			this->_butSave->Text = L"Zapisz Obraz";
 			this->_butSave->UseVisualStyleBackColor = true;
 			this->_butSave->Click += gcnew System::EventHandler(this, &MainWindow::_butSave_Click);
 			// 
@@ -118,7 +141,7 @@ namespace ImgOps
 			this->_tabImage->Padding = System::Windows::Forms::Padding(3);
 			this->_tabImage->Size = System::Drawing::Size(640, 480);
 			this->_tabImage->TabIndex = 0;
-			this->_tabImage->Text = L"Image";
+			this->_tabImage->Text = L"Obraz";
 			this->_tabImage->UseVisualStyleBackColor = true;
 			// 
 			// _picBoxImage
@@ -176,14 +199,39 @@ namespace ImgOps
 			// 
 			// _butsPanels
 			// 
+			this->_butsPanels->Controls->Add(this->_butDecrypt);
+			this->_butsPanels->Controls->Add(this->_butEncrypt);
+			this->_butsPanels->Controls->Add(this->_butKeyLoad);
+			this->_butsPanels->Controls->Add(this->_butKeySave);
+			this->_butsPanels->Controls->Add(this->_butKeyGen);
 			this->_butsPanels->Controls->Add(this->_butFourierExp);
 			this->_butsPanels->Controls->Add(this->_butFourier);
 			this->_butsPanels->Controls->Add(this->_butLoad);
 			this->_butsPanels->Controls->Add(this->_butSave);
 			this->_butsPanels->Location = System::Drawing::Point(666, 34);
 			this->_butsPanels->Name = L"_butsPanels";
-			this->_butsPanels->Size = System::Drawing::Size(115, 155);
+			this->_butsPanels->Size = System::Drawing::Size(115, 373);
 			this->_butsPanels->TabIndex = 0;
+			// 
+			// _butKeyGen
+			// 
+			this->_butKeyGen->Location = System::Drawing::Point(3, 155);
+			this->_butKeyGen->Name = L"_butKeyGen";
+			this->_butKeyGen->Size = System::Drawing::Size(108, 36);
+			this->_butKeyGen->TabIndex = 5;
+			this->_butKeyGen->Text = L"Generuj Klucze RSA";
+			this->_butKeyGen->UseVisualStyleBackColor = true;
+			this->_butKeyGen->Click += gcnew System::EventHandler(this, &MainWindow::_butKeyGen_Click);
+			// 
+			// _butFourierExp
+			// 
+			this->_butFourierExp->Location = System::Drawing::Point(4, 119);
+			this->_butFourierExp->Name = L"_butFourierExp";
+			this->_butFourierExp->Size = System::Drawing::Size(108, 30);
+			this->_butFourierExp->TabIndex = 4;
+			this->_butFourierExp->Text = L"Fourier Log";
+			this->_butFourierExp->UseVisualStyleBackColor = true;
+			this->_butFourierExp->Click += gcnew System::EventHandler(this, &MainWindow::_butFourierLog_Click);
 			// 
 			// _butFourier
 			// 
@@ -195,29 +243,59 @@ namespace ImgOps
 			this->_butFourier->UseVisualStyleBackColor = true;
 			this->_butFourier->Click += gcnew System::EventHandler(this, &MainWindow::_butFourier_Click);
 			// 
-			// _butFourierExp
+			// _butKeySave
 			// 
-			this->_butFourierExp->Location = System::Drawing::Point(4, 119);
-			this->_butFourierExp->Name = L"_butFourierLog";
-			this->_butFourierExp->Size = System::Drawing::Size(108, 30);
-			this->_butFourierExp->TabIndex = 4;
-			this->_butFourierExp->Text = L"Fourier Log";
-			this->_butFourierExp->UseVisualStyleBackColor = true;
-			this->_butFourierExp->Click += gcnew System::EventHandler(this, &MainWindow::_butFourierLog_Click);
+			this->_butKeySave->Location = System::Drawing::Point(4, 197);
+			this->_butKeySave->Name = L"_butKeySave";
+			this->_butKeySave->Size = System::Drawing::Size(108, 38);
+			this->_butKeySave->TabIndex = 6;
+			this->_butKeySave->Text = L"Zapisz Klucze RSA";
+			this->_butKeySave->UseVisualStyleBackColor = true;
+			this->_butKeySave->Click += gcnew System::EventHandler(this, &MainWindow::_butKeySave_Click);
+			// 
+			// _butKeyLoad
+			// 
+			this->_butKeyLoad->Location = System::Drawing::Point(4, 241);
+			this->_butKeyLoad->Name = L"_butKeyLoad";
+			this->_butKeyLoad->Size = System::Drawing::Size(108, 38);
+			this->_butKeyLoad->TabIndex = 7;
+			this->_butKeyLoad->Text = L"Wczytaj Klucze RSA";
+			this->_butKeyLoad->UseVisualStyleBackColor = true;
+			this->_butKeyLoad->Click += gcnew System::EventHandler(this, &MainWindow::_butKeyLoad_Click);
+			// 
+			// _butEncrypt
+			// 
+			this->_butEncrypt->Location = System::Drawing::Point(4, 285);
+			this->_butEncrypt->Name = L"_butEncrypt";
+			this->_butEncrypt->Size = System::Drawing::Size(108, 38);
+			this->_butEncrypt->TabIndex = 8;
+			this->_butEncrypt->Text = L"Zaszyfruj Obraz";
+			this->_butEncrypt->UseVisualStyleBackColor = true;
+			this->_butEncrypt->Click += gcnew System::EventHandler(this, &MainWindow::_butEncrypt_Click);
+			// 
+			// _butDecrypt
+			// 
+			this->_butDecrypt->Location = System::Drawing::Point(4, 329);
+			this->_butDecrypt->Name = L"_butDecrypt";
+			this->_butDecrypt->Size = System::Drawing::Size(108, 38);
+			this->_butDecrypt->TabIndex = 9;
+			this->_butDecrypt->Text = L"Rozszyfruj Obraz";
+			this->_butDecrypt->UseVisualStyleBackColor = true;
+			this->_butDecrypt->Click += gcnew System::EventHandler(this, &MainWindow::_butDecrypt_Click);
 			// 
 			// MainWindow
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(800, 560);
-			this->MaximumSize = System::Drawing::Size(800, 560);
-			this->MinimumSize = System::Drawing::Size(800, 560);
+			this->ClientSize = System::Drawing::Size(784, 521);
 			this->Controls->Add(this->_butsPanels);
 			this->Controls->Add(this->_tabsImages);
+			this->MaximumSize = System::Drawing::Size(800, 560);
+			this->MinimumSize = System::Drawing::Size(800, 560);
 			this->Name = L"MainWindow";
 			this->ShowIcon = false;
 			this->SizeGripStyle = System::Windows::Forms::SizeGripStyle::Hide;
-			this->Text = L"Image Show";
+			this->Text = L"Image Ops";
 			this->_tabsImages->ResumeLayout(false);
 			this->_tabImage->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->_picBoxImage))->EndInit();
@@ -230,5 +308,5 @@ namespace ImgOps
 
 		}
 #pragma endregion
-};
+	};
 }

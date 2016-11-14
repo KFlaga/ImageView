@@ -48,6 +48,10 @@ namespace ImgOps
 		bool WriteByte(byte data);
 
 		int64 ReadSome(int64 bytesToRead, byte* buffer);
+		// Reads one line (or untill EOF or bytesToRead) from file and stores in buffer (zero-terminated)
+		// Returns number of bytes read or zero on failure
+		// EOF / endline is not counted
+		int64 ReadLine(int64 bytesToRead, byte* buffer);
 		int64 WriteSome(int64 bytesToWrite, byte* buffer);
 
 	protected:
